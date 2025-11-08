@@ -1,34 +1,38 @@
-const btn = document.getElementById("downloadBtn")
-const input = document.getElementById("link")
-const result = document.getElementById("result")
+document.getElementById("downloadBtn").addEventListener("click", async () => {
+  const linkInput = document.getElementById("link");
+  const resultDiv = document.getElementById("result");
+  const url = linkInput.value.trim();
 
-btn.addEventListener("click", async () => {
-  const url = input.value.trim()
   if (!url) {
-    alert("Please paste a TikTok link")
-    return
+    resultDiv.innerHTML = "<p>Please enter a TikTok link.</p>";
+    return;
   }
 
-  result.textContent = "Fetching..."
+  resultDiv.innerHTML = "<p>Fetching download link...</p>";
+
   try {
     const res = await fetch("/api/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url })
-    })
-    const data = await res.json()
+    });
 
-    if (data?.data?.play) {
-      const videoUrl = data.data.no_watermark || data.data.play
-      result.innerHTML = `
-        <video controls src="${videoUrl}"></video>
-        <a href="${videoUrl}" download>Download video</a>
-      `
-    } else {
-      result.textContent = "Error fetching video."
+    const data = await res.json();
+
+    if (!data.data || !data.data.play) {
+      resultDiv.innerHTML = "<p>Could not fetch video. Try again.</p>";
+      return;
     }
+
+    const videoLink = data.data.play;
+    resultDiv.innerHTML = `
+      <p>Download Ready:</p>
+      <a href="${videoLink}" target="_blank" rel="noopener noreferrer">
+        <button>Download Video</button>
+      </a>
+    `;
   } catch (err) {
-    console.error(err)
-    result.textContent = "Something went wrong."
+    console.error(err);
+    resultDiv.innerHTML = "<p>Something went wrong. Please try again.</p>";
   }
-})
+});
